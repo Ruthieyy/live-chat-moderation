@@ -1,0 +1,86 @@
+{
+  "tool": "locust 2.47.0",
+  "host": "http://127.0.0.1:8000",
+  "date": "2026-10-26",
+  "cpu": "Intel(R) Xeon(R) Processor",
+  "cpu_count": 4,
+  "warmup": {
+    "users": 8,
+    "duration_s": 8,
+    "included": false
+  },
+  "percentile_note": "p50/p95/p99 are Locust integer-millisecond histogram buckets. average_ms, min_ms, and max_ms are the stats CSV floats.",
+  "runs": [
+    {
+      "users": 1,
+      "duration_s": 30,
+      "endpoint": "POST /v1/moderate",
+      "requests": 607,
+      "failures": 0,
+      "average_ms": 2.549066540366308,
+      "min_ms": 1.595874000031472,
+      "p50_ms": 3,
+      "p95_ms": 3,
+      "p99_ms": 4,
+      "max_ms": 16.122059999815974,
+      "requests_per_s": 20.929538173807412
+    },
+    {
+      "users": 10,
+      "duration_s": 30,
+      "endpoint": "POST /v1/moderate",
+      "requests": 6153,
+      "failures": 0,
+      "average_ms": 2.259294286851728,
+      "min_ms": 0.8906649998152716,
+      "p50_ms": 2,
+      "p95_ms": 4,
+      "p99_ms": 5,
+      "max_ms": 18.9053750000312,
+      "requests_per_s": 212.02356913526748
+    },
+    {
+      "users": 20,
+      "duration_s": 30,
+      "endpoint": "POST /v1/moderate",
+      "requests": 10999,
+      "failures": 0,
+      "average_ms": 2.540427565232336,
+      "min_ms": 0.8329780000622122,
+      "p50_ms": 2,
+      "p95_ms": 5,
+      "p99_ms": 6,
+      "max_ms": 31.89721900002951,
+      "requests_per_s": 379.01655309352105
+    }
+  ],
+  "async_enqueue_20_users": {
+    "endpoint": "POST /v1/moderate/async",
+    "requests": 1057,
+    "failures": 0,
+    "p50_ms": 3,
+    "p99_ms": 7,
+    "max_ms": 30.14083500011111,
+    "requests_per_s": 36.42335636147393
+  },
+  "batch_20_users": {
+    "endpoint": "POST /v1/moderate/batch",
+    "requests": 2231,
+    "failures": 0,
+    "p50_ms": 3,
+    "p99_ms": 7,
+    "max_ms": 23.901806000139914,
+    "requests_per_s": 76.87843712625197
+  },
+  "worker_queue_wait_sequential": {
+    "method": "40 sequential async jobs after the Locust runs; numpy.percentile on queue_ms; every job reached status=done",
+    "n": 40,
+    "failures": 0,
+    "queue_ms_mean": 14.963475,
+    "queue_ms_p50": 14.9555,
+    "queue_ms_p95": 15.9207,
+    "queue_ms_p99": 16.30273,
+    "queue_ms_min": 13.689,
+    "queue_ms_max": 16.417
+  }
+}
