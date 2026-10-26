@@ -2,13 +2,14 @@
 
 Real-time toxicity, hate, and spam scoring for livestream chat. A small CPU-trained classifier is exported to ONNX and served from FastAPI, with a Redis Streams worker for batched traffic, Prometheus metrics, and a provisioned Grafana dashboard.
 
-Numbers below were measured on this machine (4 vCPU, `Intel(R) Xeon(R) Processor`). Raw JSON is in `benchmarks/training.json` and `benchmarks/runtime.json`. The HTTP table is filled from a Locust run against `docker compose`.
+Numbers below were measured on this machine (4 vCPU, `Intel(R) Xeon(R) Processor`). Raw JSON is in `benchmarks/`.
 
 ## Resume bullets
 
 - Built an end-to-end livestream comment moderation service: a CPU-trained multi-label toxicity model (Jigsaw, test mean ROC-AUC 0.953) exported to ONNX Runtime, with a sync FastAPI path and a Redis Streams micro-batch worker.
-- Served an INT8 ONNX model (3.2 MB versus 12.8 MB FP32) whose in-process p99 is 0.09 ms; the forward pass is about 1.9× faster in ONNX Runtime than in PyTorch eager at one thread.
-- Shipped Prometheus latency, error, decision, and PSI drift metrics with a provisioned Grafana dashboard, plus a Cloud Run deploy path that keeps CPU allocated so cold starts do not eat the 100 ms p99 budget.
+- Kept the sync path under the 100 ms p99 budget by a wide margin: Locust against Docker Compose measured 6 ms p99 and 379 requests/s at 20 concurrent users, with zero failures. The ONNX forward itself is 0.02 ms p99.
+- Served INT8 weights (3.2 MB versus 12.8 MB FP32). ONNX Runtime FP32 is about 1.9× faster than PyTorch eager at one thread; INT8 did not get faster, because the model is an embedding table.
+- Shipped Prometheus latency, error, decision, and PSI drift metrics with a provisioned Grafana dashboard, plus a Cloud Run deploy path that keeps CPU allocated so cold starts do not eat the latency budget.
 
 ## Architecture
 
@@ -147,4 +148,20 @@ FP32 ONNX matches PyTorch logits within 4e-6. INT8 weights cut the file from 12.
 
 ### HTTP
 
-Recorded from Locust against the compose stack. The table is updated from `benchmarks/loadtest.json` after that run.
+Locust 2.47 against `docker compose` on this host, after an 8 second warmup at 8 users that is not included below. Each row is a fresh 30 second run. Percentiles are Locust's integer-millisecond histogram; average, min, and max are the stats CSV. Every run had zero failures. The endpoint is `POST /v1/moderate`.
+
+| Users | Requests | Avg | Min | p50 | p95 | p99 | Max | Req/s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 607 | 2.55 ms | 1.60 ms | 3 ms | 3 ms | 4 ms | 16.1 ms | 20.9 |
+| 10 | 6,153 | 2.26 ms | 0.89 ms | 2 ms | 4 ms | 5 ms | 18.9 ms | 212 |
+| 20 | 10,999 | 2.54 ms | 0.83 ms | 2 ms | 5 ms | 6 ms | 31.9 ms | 379 |
+
+At 20 users the async enqueue (`POST /v1/moderate/async`) p99 was 7 ms and a 4-comment batch p99 was 7 ms, also with zero failures. A separate probe of 40 sequential jobs, after the load test, measured worker queue wait at p50 15.0 ms and p99 16.3 ms (all 40 finished). That wait is the 10 ms micro-batch coalesce plus Redis, not the model. The model forward is 0.02 ms, so almost all of the 6 ms HTTP p99 is the framework and the network hop.
+
+## Trade-offs
+
+- A bag-of-bigrams model instead of a transformer. Livestream chat needs the decision inside the frame budget, and this net trains on CPU in under a minute. The cost is truncation (36% of Wikipedia comments exceed 64 tokens) and weaker rare-class precision. Hate and threat are not auto-blocked unless validation can certify the precision floor; today they mostly fall through to the toxic score or to review.
+- INT8 for size, not speed. Dynamic quantization does not touch the embedding, so latency did not drop and probabilities can move by up to 0.025. FP32 is still in the image if that gap is too loose.
+- Spam is rules. The public labels do not contain spam, and a silver-labeled head would just memorize the rules. Rules are sub-millisecond and easy to test; they also flag ordinary Wikipedia URLs, which is why test-set flag precision falls when they are included.
+- One replica's PSI window, not a fleet aggregator. The metric is the same histogram a central job would compute.
+- Sync logs are debug. An info line per comment would move p99 more than the model does.
