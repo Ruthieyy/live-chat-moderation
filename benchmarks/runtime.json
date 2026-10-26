@@ -1,0 +1,112 @@
+{
+  "cpu": "Intel(R) Xeon(R) Processor",
+  "cpu_count": 4,
+  "torch": "2.14.1+cpu",
+  "onnxruntime": "1.31.1",
+  "method": "Sequential wall clock with time.perf_counter. Warmup 100 calls. Forward rows exclude tokenization. ORT intra_op_num_threads=1. pytorch_1thread sets torch.set_num_threads(1); pytorch_all_threads uses the machine CPU count.",
+  "served_onnx_file": "model.int8.onnx",
+  "forward": {
+    "pytorch_1thread": {
+      "batch_1": {
+        "n": 500,
+        "mean_ms": 0.0266,
+        "p50_ms": 0.026,
+        "p95_ms": 0.031,
+        "p99_ms": 0.035,
+        "min_ms": 0.0254,
+        "max_ms": 0.0568
+      },
+      "batch_32": {
+        "n": 125,
+        "mean_ms": 0.1673,
+        "p50_ms": 0.1549,
+        "p95_ms": 0.2286,
+        "p99_ms": 0.2418,
+        "min_ms": 0.1507,
+        "max_ms": 0.2424
+      }
+    },
+    "pytorch_all_threads": {
+      "batch_1": {
+        "n": 500,
+        "mean_ms": 0.0268,
+        "p50_ms": 0.0262,
+        "p95_ms": 0.0337,
+        "p99_ms": 0.0391,
+        "min_ms": 0.0256,
+        "max_ms": 0.0446
+      },
+      "batch_32": {
+        "n": 125,
+        "mean_ms": 0.3743,
+        "p50_ms": 0.0581,
+        "p95_ms": 0.0838,
+        "p99_ms": 7.5461,
+        "min_ms": 0.055,
+        "max_ms": 23.4823
+      }
+    },
+    "onnx_fp32": {
+      "batch_1": {
+        "n": 500,
+        "mean_ms": 0.0141,
+        "p50_ms": 0.0136,
+        "p95_ms": 0.0183,
+        "p99_ms": 0.0202,
+        "min_ms": 0.0132,
+        "max_ms": 0.042
+      },
+      "batch_32": {
+        "n": 125,
+        "mean_ms": 0.1483,
+        "p50_ms": 0.1454,
+        "p95_ms": 0.171,
+        "p99_ms": 0.1922,
+        "min_ms": 0.1375,
+        "max_ms": 0.1997
+      }
+    },
+    "onnx_int8": {
+      "batch_1": {
+        "n": 500,
+        "mean_ms": 0.0166,
+        "p50_ms": 0.0162,
+        "p95_ms": 0.0205,
+        "p99_ms": 0.0228,
+        "min_ms": 0.0157,
+        "max_ms": 0.0314
+      },
+      "batch_32": {
+        "n": 125,
+        "mean_ms": 0.1687,
+        "p50_ms": 0.1639,
+        "p95_ms": 0.1914,
+        "p99_ms": 0.2119,
+        "min_ms": 0.1598,
+        "max_ms": 0.2646
+      }
+    }
+  },
+  "engine_predict_batch_1": {
+    "n": 500,
+    "mean_ms": 0.0645,
+    "p50_ms": 0.0622,
+    "p95_ms": 0.0803,
+    "p99_ms": 0.0927,
+    "min_ms": 0.0598,
+    "max_ms": 0.0994
+  },
+  "parity": {
+    "fp32_max_abs_logit": 3.814697265625e-06,
+    "int8_max_abs_prob": 6.922904867678881e-05
+  },
+  "engine_predict_batch_32": {
+    "n": 200,
+    "mean_ms": 1.263,
+    "p50_ms": 1.2481,
+    "p95_ms": 1.3632,
+    "p99_ms": 1.4116,
+    "min_ms": 1.2064,
+    "max_ms": 1.5074
+  }
+}
